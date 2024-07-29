@@ -52,11 +52,6 @@
         <h1>Welcome to Tech Consulting</h1>
         <p>We offer a range of services to help your business leverage technology to achieve your goals. Whether you need help with software development, system integration, or IT strategy, our experienced consultants are here to assist you.</p>
 
-        <div class="query-widget">
-            <input type="text" id="aify-query" placeholder="Enter your query">
-            <button id="aify-button">Search</button>
-        </div>
-
         <h2>Our Services</h2>
         <p>Learn more about the services we offer:</p>
         <ul>
@@ -73,23 +68,8 @@
     </div>
 
     <!-- Include the script at the end of the body -->
-    <script src="https://cdn.jsdelivr.net/gh/esxr/aify@main/aify-navigation.js"></script>
-    <script>
-        console.log("Script loaded");
+    <div id="root"></div>
+    <script src="https://cdn.jsdelivr.net/gh/esxr/aify@main/dist/assets/index.js"></script>
 
-        function setupAifyWidget() {
-            const queryInput = document.getElementById('aify-query');
-            const queryButton = document.getElementById('aify-button');
-
-            if (queryInput && queryButton) {
-                console.log('Setting up event listener for button');
-                queryButton.onclick = startAifyNavigation;
-            } else {
-                console.error('Aify widget elements not found.');
-            }
-        }
-
-        setupAifyWidget();
-    </script>
 </body>
 </html>
