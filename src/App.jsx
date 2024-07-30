@@ -7,7 +7,7 @@ import './App.css'
 
 function App() {
   return (
-    <ChakraProvider>
+    <ChakraProvider resetCSS={false}>
       <ChatbotButton />
     </ChakraProvider>
   )
