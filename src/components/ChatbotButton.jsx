@@ -9,6 +9,9 @@ const ChatbotButton = () => {
     setIsOpen(!isOpen);
   };
 
+  const baseUrl = window.location.origin;
+  console.log('Base URL detected:', baseUrl);
+
   return (
     <Box position="fixed" bottom="4" right="4" zIndex="1000">
       {!isOpen && (
