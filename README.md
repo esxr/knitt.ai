@@ -19,7 +19,7 @@ To use Aify Navigation, follow these steps:
 Include the following script in the `<head>` section of your HTML:
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/esxr/aify@main/dist/assets/index.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/esxr/aify@main/dist/index.js"></script>
 ```
 
 ### Step 2: Add a `root` element
