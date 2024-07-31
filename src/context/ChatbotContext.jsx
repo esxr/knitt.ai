@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import preloadedMessages from '../preloadedMessages'; // Import the preloaded messages
 
 const ChatbotContext = createContext();
 
@@ -7,38 +8,40 @@ export const ChatbotProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [isInitialLoaded, setIsInitialLoaded] = useState(false);
   const [hiddenMessages, setHiddenMessages] = useState([]);
+  const [apiKey, setApiKey] = useState(null);
 
   useEffect(() => {
-    // Fetch preloaded messages from the JSON file
-    const fetchPreloadedMessages = async () => {
+    // Get the script tag with the API key
+    const scriptTag = document.querySelector('script[data-api-key]');
+    if (scriptTag) {
+      const key = scriptTag.getAttribute('data-api-key');
+      setApiKey(key);
+    } else {
+      console.error('API key not found. Please include the data-api-key attribute in the script tag.');
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!apiKey) return;
+
+    // Use the preloaded messages directly from the module
+    const [systemMessage, ...rest] = preloadedMessages;
+    setMessages(rest);
+
+    // Call the API with the initial system message
+    const fetchInitialMessage = async () => {
+      const requestBody = {
+        model: 'gpt-4o',
+        messages: [systemMessage]
+      };
+
       try {
-        const response = await fetch('/preloadedMessages.json');
-        let data = await response.json();
-
-        // Replace <baseurl> with the actual URL
-        const baseUrl = window.location.origin;
-        data = data.map(message => {
-          if (message.content.includes('<baseurl>')) {
-            message.content = message.content.replace('<baseurl>', baseUrl);
-          }
-          return message;
-        });
-
-        // Separate system message
-        const [systemMessage, ...rest] = data;
-        setMessages(rest);
-
-        // Call the API with the initial system message
-        const requestBody = {
-          model: 'gpt-4o',
-          messages: [systemMessage]
-        };
-
         const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+            'Authorization': `Bearer ${apiKey}`
           },
           body: JSON.stringify(requestBody)
         });
@@ -50,12 +53,12 @@ export const ChatbotProvider = ({ children }) => {
         setHiddenMessages([systemMessage, botInitialMessage]);
         setIsInitialLoaded(true);
       } catch (error) {
-        console.error('Error fetching preloaded messages:', error);
+        console.error('Error fetching initial message:', error);
       }
     };
 
-    fetchPreloadedMessages();
-  }, []);
+    fetchInitialMessage();
+  }, [apiKey]);
 
   const toggleChat = () => {
     setIsOpen((prevState) => !prevState);
@@ -77,7 +80,7 @@ export const ChatbotProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify(requestBody)
       });
