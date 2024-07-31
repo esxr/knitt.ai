@@ -4,7 +4,7 @@ import { ChatIcon, CloseIcon, ArrowForwardIcon } from '@chakra-ui/icons';
 import { useChatbot } from '../context/ChatbotContext';
 
 const ChatbotButton = () => {
-  const { isOpen, toggleChat, messages, sendMessage } = useChatbot();
+  const { isOpen, toggleChat, messages, sendMessage, isInitialLoaded } = useChatbot();
   const [inputValue, setInputValue] = useState('');
 
   const handleInputChange = (event) => setInputValue(event.target.value);
@@ -51,24 +51,26 @@ const ChatbotButton = () => {
                 borderRadius="full"
               />
             </Box>
-            <VStack spacing="2" align="stretch" flex="1">
-              {messages.map((message, index) => (
-                <HStack
-                  key={index}
-                  justifyContent={message.role === 'user' ? 'flex-end' : 'flex-start'}
-                >
-                  <Box
-                    bg={message.role === 'user' ? 'blue.500' : 'gray.300'}
-                    color={message.role === 'user' ? 'white' : 'black'}
-                    px="4"
-                    py="2"
-                    borderRadius="md"
+            {isInitialLoaded && (
+              <VStack spacing="2" align="stretch" flex="1">
+                {messages.map((message, index) => (
+                  <HStack
+                    key={index}
+                    justifyContent={message.role === 'user' ? 'flex-end' : 'flex-start'}
                   >
-                    <Text>{message.content}</Text>
-                  </Box>
-                </HStack>
-              ))}
-            </VStack>
+                    <Box
+                      bg={message.role === 'user' ? 'blue.500' : 'gray.300'}
+                      color={message.role === 'user' ? 'white' : 'black'}
+                      px="4"
+                      py="2"
+                      borderRadius="md"
+                    >
+                      <Text>{message.content}</Text>
+                    </Box>
+                  </HStack>
+                ))}
+              </VStack>
+            )}
           </VStack>
           <Box mt="4">
             <InputGroup>
