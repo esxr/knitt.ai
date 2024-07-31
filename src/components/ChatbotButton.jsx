@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
-import { Button, Box, Textarea, VStack, IconButton } from '@chakra-ui/react';
-import { ChatIcon, CloseIcon } from '@chakra-ui/icons';
+import { Box, Input, VStack, IconButton, Text, HStack, InputGroup, InputRightElement } from '@chakra-ui/react';
+import { ChatIcon, CloseIcon, ArrowForwardIcon } from '@chakra-ui/icons';
+import { useChatbot } from '../context/ChatbotContext';
 
 const ChatbotButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, toggleChat, messages, sendMessage } = useChatbot();
+  const [inputValue, setInputValue] = useState('');
 
-  const toggleChat = () => {
-    setIsOpen(!isOpen);
+  const handleInputChange = (event) => setInputValue(event.target.value);
+
+  const handleSendMessage = () => {
+    if (inputValue.trim() !== '') {
+      sendMessage(inputValue);
+      setInputValue('');
+    }
   };
 
-  const baseUrl = window.location.origin;
-  console.log('Base URL detected:', baseUrl);
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
 
   return (
     <Box position="fixed" bottom="4" right="4" zIndex="1000">
       {!isOpen && (
-        <Button onClick={toggleChat} colorScheme="blue" borderRadius="full" p="4">
-          <ChatIcon />
-        </Button>
+        <IconButton onClick={toggleChat} colorScheme="blue" borderRadius="full" p="4" icon={<ChatIcon />} />
       )}
       {isOpen && (
         <Box
@@ -30,8 +38,10 @@ const ChatbotButton = () => {
           position="fixed"
           bottom="4"
           right="4"
+          display="flex"
+          flexDirection="column"
         >
-          <VStack spacing="4">
+          <VStack spacing="4" flex="1" overflowY="auto">
             <Box width="full" textAlign="right">
               <IconButton
                 icon={<CloseIcon />}
@@ -41,11 +51,42 @@ const ChatbotButton = () => {
                 borderRadius="full"
               />
             </Box>
-            <Textarea placeholder="Type your message here..." />
-            <Button colorScheme="blue" width="full">
-              Send
-            </Button>
+            <VStack spacing="2" align="stretch" flex="1">
+              {messages.map((message, index) => (
+                <HStack
+                  key={index}
+                  justifyContent={message.role === 'user' ? 'flex-end' : 'flex-start'}
+                >
+                  <Box
+                    bg={message.role === 'user' ? 'blue.500' : 'gray.300'}
+                    color={message.role === 'user' ? 'white' : 'black'}
+                    px="4"
+                    py="2"
+                    borderRadius="md"
+                  >
+                    <Text>{message.content}</Text>
+                  </Box>
+                </HStack>
+              ))}
+            </VStack>
           </VStack>
+          <Box mt="4">
+            <InputGroup>
+              <Input
+                value={inputValue}
+                onChange={handleInputChange}
+                placeholder="Type your message here..."
+                onKeyPress={handleKeyPress}
+              />
+              <InputRightElement>
+                <IconButton
+                  icon={<ArrowForwardIcon />}
+                  colorScheme="blue"
+                  onClick={handleSendMessage}
+                />
+              </InputRightElement>
+            </InputGroup>
+          </Box>
         </Box>
       )}
     </Box>
