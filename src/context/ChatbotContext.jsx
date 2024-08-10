@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import preloadedMessages from '../preloadedMessages'; // Import the preloaded messages
+import { fetchResponseFromOpenAI, fetchResponseFromCustomServer } from '../utils/api';
+import { validateCustomApiKey } from '../utils/validation';
+import { formatUserMessage } from '../utils/messageFormatting';
 
 const ChatbotContext = createContext();
 
@@ -9,15 +12,28 @@ export const ChatbotProvider = ({ children }) => {
   const [isInitialLoaded, setIsInitialLoaded] = useState(false);
   const [hiddenMessages, setHiddenMessages] = useState([]);
   const [apiKey, setApiKey] = useState(null);
+  const [isValidKey, setIsValidKey] = useState(false);
+  const [isCustomKey, setIsCustomKey] = useState(false);
 
   useEffect(() => {
-    // Get the script tag with the API key
-    const scriptTag = document.querySelector('script[data-api-key]');
+    // Get the script tag with the API keys
+    const scriptTag = document.querySelector('script[data-api-key], script[data-openai-api-key]');
     if (scriptTag) {
-      const key = scriptTag.getAttribute('data-api-key');
-      setApiKey(key);
+      const openaiKey = scriptTag.getAttribute('data-openai-api-key');
+      const customKey = scriptTag.getAttribute('data-api-key');
+      if (openaiKey) {
+        setApiKey(openaiKey);
+        setIsValidKey(true); // OpenAI key doesn't need validation
+      } else if (customKey) {
+        console.log('Custom API key found:', customKey);
+        setApiKey(customKey);
+        setIsCustomKey(true); // Indicate that a custom API key is being used
+      } else {
+        console.error('API key not found. Please include either data-openai-api-key or data-api-key attribute in the script tag.');
+        return;
+      }
     } else {
-      console.error('API key not found. Please include the data-api-key attribute in the script tag.');
+      console.error('API key not found. Please include either data-openai-api-key or data-api-key attribute in the script tag.');
       return;
     }
   }, []);
@@ -25,32 +41,48 @@ export const ChatbotProvider = ({ children }) => {
   useEffect(() => {
     if (!apiKey) return;
 
-    // Use the preloaded messages directly from the module
-    const [systemMessage, ...rest] = preloadedMessages;
-    setMessages(rest);
+    const validateApiKey = async () => {
+      if (!apiKey || isValidKey) return; // Skip validation if already valid or no key
 
-    // Call the API with the initial system message
+      const serverUrl = import.meta.env.VITE_SERVER_URL; // Get the server URL from environment
+      const isValid = await validateCustomApiKey(apiKey, serverUrl);
+
+      if (isValid) {
+        setIsValidKey(true);
+      } else {
+        console.error('Invalid custom API key.');
+      }
+    };
+
+    if (isCustomKey) {
+      validateApiKey();
+    } else {
+      setIsValidKey(true); // For OpenAI keys, assume valid if present
+    }
+  }, [apiKey, isCustomKey, isValidKey]);
+
+  useEffect(() => {
+    if (!isValidKey) return;
+
     const fetchInitialMessage = async () => {
       const requestBody = {
         model: 'gpt-4o',
-        messages: [systemMessage]
+        messages: [preloadedMessages[0]],
       };
 
       try {
-        const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-          },
-          body: JSON.stringify(requestBody)
-        });
+        let apiData;
+        if (isCustomKey) {
+          const serverUrl = import.meta.env.VITE_SERVER_URL; // Use your server URL
+          apiData = await fetchResponseFromCustomServer(apiKey, requestBody, serverUrl);
+        } else {
+          apiData = await fetchResponseFromOpenAI(apiKey, requestBody);
+        }
 
-        const apiData = await apiResponse.json();
         const botInitialMessage = apiData.choices[0].message;
 
         // Store the initial messages and response without displaying them
-        setHiddenMessages([systemMessage, botInitialMessage]);
+        setHiddenMessages([preloadedMessages[0], botInitialMessage]);
         setIsInitialLoaded(true);
       } catch (error) {
         console.error('Error fetching initial message:', error);
@@ -58,7 +90,7 @@ export const ChatbotProvider = ({ children }) => {
     };
 
     fetchInitialMessage();
-  }, [apiKey]);
+  }, [apiKey, isValidKey, isCustomKey]);
 
   const toggleChat = () => {
     setIsOpen((prevState) => !prevState);
@@ -68,32 +100,30 @@ export const ChatbotProvider = ({ children }) => {
     const userMessage = { role: 'user', content: text };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    const transformedMessage = `This is a user query: ${text}. Find the appropriate link, and send a response like so:\n\n{\n"response": "<your_response>",\n"relevant_link": "<link_here>"\n}`;
+    const transformedMessage = formatUserMessage(text);
 
     const requestBody = {
       model: 'gpt-4o',
-      messages: [...hiddenMessages, ...messages, { role: 'user', content: transformedMessage }]
+      messages: [...hiddenMessages, { role: 'user', content: transformedMessage }],
     };
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
+      let apiData;
+      if (isCustomKey) {
+        const serverUrl = import.meta.env.VITE_SERVER_URL; // Use your server URL
+        apiData = await fetchResponseFromCustomServer(apiKey, requestBody, serverUrl);
+      } else {
+        apiData = await fetchResponseFromOpenAI(apiKey, requestBody);
+      }
 
-      const data = await response.json();
-      const botMessage = data.choices[0].message;
+      const botMessage = apiData.choices[0].message;
 
       const responseContent = JSON.parse(botMessage.content);
       const { response: botResponse, relevant_link: relevantLink } = responseContent;
 
-      if (relevantLink) {
-        window.location.href = relevantLink;
-      }
+      // if (relevantLink) {
+      //   window.location.href = relevantLink;
+      // }
 
       const displayedBotMessage = { role: 'assistant', content: botResponse };
       setMessages((prevMessages) => [...prevMessages, displayedBotMessage]);
