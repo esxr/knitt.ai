@@ -13,6 +13,29 @@ Knitt AI is a tool that allows you to integrate AI into your website in `a singl
 
 Elevate your website's functionality and user experience with Knitt AI, making your digital presence smarter and more efficient.
 
+## Demo
+
+Paste this script in your browser `console` on any website to try it out
+> It doesn't currently work with server rendered pages
+
+```js
+// Create a new div element with id="knitt-root"
+const knittRoot = document.createElement('div');
+knittRoot.id = 'knitt-root';
+
+// Append the created div to the body
+document.body.appendChild(knittRoot);
+
+// Create a script element
+const knittScript = document.createElement('script');
+knittScript.src = 'https://cdn.jsdelivr.net/gh/esxr/knitt.ai@main/dist/index.js';
+knittScript.setAttribute('data-openai-api-key', 'YOUR-OPENAI-API-KEY');
+knittScript.defer = true;
+
+// Append the script to the body
+document.body.appendChild(knittScript);
+```
+
 ## Installation
 
 **Ready to revolutionize your website?**
