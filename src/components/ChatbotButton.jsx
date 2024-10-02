@@ -25,7 +25,13 @@ const ChatbotButton = () => {
   return (
     <Box position="fixed" bottom="4" right="4" zIndex="1000">
       {!isOpen && (
-        <IconButton onClick={toggleChat} colorScheme="blue" borderRadius="full" p="4" icon={<ChatIcon />} />
+        <IconButton
+          onClick={toggleChat}
+          colorScheme="blue"
+          borderRadius="full"
+          p="4"
+          icon={<ChatIcon />}
+        />
       )}
       {isOpen && (
         <Box
@@ -41,26 +47,28 @@ const ChatbotButton = () => {
           display="flex"
           flexDirection="column"
         >
+          <IconButton
+            icon={<CloseIcon />}
+            onClick={toggleChat}
+            colorScheme="red"
+            size="sm"
+            borderRadius="full"
+            width="1"
+          />
           <VStack spacing="4" flex="1" overflowY="auto">
-            <Box width="full" textAlign="right">
-              <IconButton
-                icon={<CloseIcon />}
-                onClick={toggleChat}
-                colorScheme="red"
-                size="sm"
-                borderRadius="full"
-              />
-            </Box>
+            <Box width="full" textAlign="right"></Box>
             {isInitialLoaded && (
               <VStack spacing="2" align="stretch" flex="1">
                 {messages.map((message, index) => (
                   <HStack
                     key={index}
-                    justifyContent={message.role === 'user' ? 'flex-end' : 'flex-start'}
+                    justifyContent={
+                      message.role === "user" ? "flex-end" : "flex-start"
+                    }
                   >
                     <Box
-                      bg={message.role === 'user' ? 'blue.500' : 'gray.300'}
-                      color={message.role === 'user' ? 'white' : 'black'}
+                      bg={message.role === "user" ? "blue.500" : "gray.300"}
+                      color={message.role === "user" ? "white" : "black"}
                       px="4"
                       py="2"
                       borderRadius="md"
@@ -75,6 +83,7 @@ const ChatbotButton = () => {
           <Box mt="4">
             <InputGroup>
               <Input
+                bg="gray.100"
                 value={inputValue}
                 onChange={handleInputChange}
                 placeholder="Type your message here..."
