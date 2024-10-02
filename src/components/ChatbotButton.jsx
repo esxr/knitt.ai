@@ -53,8 +53,7 @@ const ChatbotButton = () => {
             colorScheme="red"
             size="sm"
             borderRadius="full"
-            width="1" 
-            mr="0"
+            width="1"
           />
           <VStack spacing="4" flex="1" overflowY="auto">
             <Box width="full" textAlign="right"></Box>
