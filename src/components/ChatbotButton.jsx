@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Box, Input, VStack, IconButton, Text, HStack, InputGroup, InputRightElement } from '@chakra-ui/react';
-import { ChatIcon, CloseIcon, ArrowForwardIcon } from '@chakra-ui/icons';
+import { ChatIcon, ArrowForwardIcon } from '@chakra-ui/icons';
 import { useChatbot } from '../context/ChatbotContext';
+import '../index.css'; // Ensure that the CSS with the .close-button class is imported
 
 const ChatbotButton = () => {
   const { isOpen, toggleChat, messages, sendMessage, isInitialLoaded } = useChatbot();
@@ -43,13 +44,10 @@ const ChatbotButton = () => {
         >
           <VStack spacing="4" flex="1" overflowY="auto">
             <Box width="full" textAlign="right">
-              <IconButton
-                icon={<CloseIcon />}
-                onClick={toggleChat}
-                colorScheme="red"
-                size="sm"
-                borderRadius="full"
-              />
+              {/* Updated close button using the new styles */}
+              <button className="close-button" onClick={toggleChat} aria-label="Close">
+                ✕
+              </button>
             </Box>
             {isInitialLoaded && (
               <VStack spacing="2" align="stretch" flex="1">
